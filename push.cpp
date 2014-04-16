@@ -140,6 +140,7 @@ class CPushMod : public CModule
 			defaults["away_only"] = "no";
 			defaults["client_count_less_than"] = "0";
 			defaults["highlight"] = "";
+			defaults["highlight_ctx"] = "";
 			defaults["idle"] = "0";
 			defaults["last_active"] = "180";
 			defaults["last_notification"] = "300";
@@ -641,6 +642,7 @@ class CPushMod : public CModule
 				expr("away_only", away_only())
 				expr("client_count_less_than", client_count_less_than())
 				expr("highlight", highlight(message))
+				expr("highlight_ctx", highlight_context(context))
 				expr("idle", idle())
 				expr("last_active", last_active(context))
 				expr("last_notification", last_notification(context))
@@ -741,6 +743,27 @@ class CPushMod : public CModule
 				}
 			}
 
+			return false;
+		}
+
+		/**
+		 * Determine if the given message matches any highlight rules.
+		 *
+		 * @param message Channel or nick context
+		 * @return True if context is on the context whitelist
+		 */
+		bool highlight_context(const CString& context)
+		{
+			VCString values;
+			options["highlight_ctx"].Split(" ", values, false);
+
+			for (VCString::iterator i = values.begin(); i != values.end(); i++)
+			{
+				if (context.AsLower() == i->AsLower())
+				{
+					return true;
+				}
+			}
 			return false;
 		}
 
@@ -856,7 +879,7 @@ class CPushMod : public CModule
 
 			return away_only()
 				&& client_count_less_than()
-				&& highlight(message)
+				&& (highlight(message) || highlight_context(context))
 				&& idle()
 				&& last_active(context)
 				&& last_notification(context)
